@@ -1,0 +1,299 @@
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: var(--n-screen-bg);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ── Material 3 status bar (52px, time left, camera cutout centered, icons right) ─ */
+.statusBar {
+  position: relative;
+  height: 52px;
+  padding: 0 24px 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+}
+
+.statusTime {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #1d1b20;
+  letter-spacing: 0.14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cameraCutout {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 24px;
+}
+
+/* Figma grid positions for the right cluster: wifi at x:0, signal at x:16
+   (overlaps wifi triangle by 1px), battery at x:38 y:1. Total width 46px. */
+.statusIcons {
+  position: relative;
+  width: 46px;
+  height: 17px;
+}
+
+.iconWifi {
+  position: absolute;
+  left: 0;
+  top: 0;
+}
+
+.iconSignal {
+  position: absolute;
+  left: 16px;
+  top: 0;
+}
+
+.iconBattery {
+  position: absolute;
+  left: 38px;
+  top: 1px;
+}
+
+/* ── Top app bar — Need logo centered. */
+.topBar {
+  flex-shrink: 0;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.topBarLogo {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 36px;
+  height: 36px;
+}
+
+.topBarLogoVideo {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+
+/* ── Body (chat content) ─────────────────────────────────── */
+.body {
+  flex: 1;
+  padding: 12px 22px 0;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  overflow: hidden;
+}
+
+.userRow {
+  display: flex;
+  justify-content: flex-end;
+  margin: 0 0 12px;
+}
+
+/* User bubble — Figma node 3156:48181.
+   Sky/200 bg, asymmetric radius (top-left, top-right, bottom-left rounded;
+   bottom-right sharp as the outgoing-message corner). */
+.userPill {
+  background: var(--n-sky-200);
+  color: var(--n-ink);
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 400;
+  letter-spacing: 0;
+  padding: 9px 12px;
+  border-radius: 14px 14px 0 14px;
+}
+
+/* AI message — plain text in Primary/Moss color, no bubble. */
+.aiText {
+  font-size: 18px;
+  line-height: 26px;
+  color: var(--n-moss);
+  letter-spacing: 0.1px;
+  font-weight: 400;
+  margin: 0 0 12px;
+}
+
+.illustrationSlot {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 0;
+}
+
+/* ── Prompt chip stack (Figma node 3683:36985) ──────────── */
+.chipLayer {
+  position: relative;
+  padding: 0 16px;
+  display: flex;
+  flex-shrink: 0;
+  margin-bottom: 8px;
+}
+
+.chipStack {
+  display: flex;
+  gap: 8px;
+  align-items: flex-start;
+  width: 100%;
+}
+
+/* Prompt chip (Figma node 3596:24150) — Moss/50 fill, 18px radius,
+   12px padding, two-line stacked text (heading + sub). */
+.chip {
+  position: relative;
+  background: #f4f6f5;
+  border: 0;
+  border-radius: 18px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  transition: background 0.18s ease;
+}
+
+.chip[data-pressed="true"] {
+  background: #eaedeb;
+}
+
+/* Animated gradient stroke on the first prompt — signals "suggested prompt"
+   without overwhelming the surface. Uses @property to animate a conic angle
+   and mask-composite to clip the fill to a stroke. */
+@property --gradient-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+
+.chip[data-first="true"]::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  padding: 2px;
+  border-radius: inherit;
+  background: conic-gradient(
+    from var(--gradient-angle),
+    rgba(52, 215, 107, 0) 0deg,
+    rgba(52, 215, 107, 0.4) 45deg,
+    #34d76b 90deg,
+    rgba(52, 215, 107, 0.4) 135deg,
+    rgba(52, 215, 107, 0) 180deg,
+    rgba(52, 215, 107, 0) 360deg
+  );
+  -webkit-mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  -webkit-mask-composite: xor;
+  mask:
+    linear-gradient(#000 0 0) content-box,
+    linear-gradient(#000 0 0);
+  mask-composite: exclude;
+  pointer-events: none;
+  animation: chipGradientRotate 4s linear infinite;
+}
+
+@keyframes chipGradientRotate {
+  to {
+    --gradient-angle: 360deg;
+  }
+}
+
+.chipHeading {
+  color: #18181b;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: 0.16px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+.chipSub {
+  color: #18181b;
+  font-size: 18px;
+  line-height: 1.25;
+  letter-spacing: 0.16px;
+  font-weight: 400;
+  white-space: nowrap;
+}
+
+/* ── Composer (Figma node 3683:36986) ───────────────────── */
+.composerWrap {
+  flex-shrink: 0;
+  padding: 0 16px;
+}
+
+/* Composer = 3 separate pills: input + mic button + plus button.
+   All share the same Moss/50 fill so they read as a connected control row. */
+.composer {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.composerInput {
+  flex: 1;
+  background: #f4f6f5;
+  border: 0;
+  border-radius: 18px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+}
+
+.composerPlaceholder {
+  font-size: 18px;
+  line-height: 24px;
+  color: #71717a;
+  letter-spacing: 0.064px;
+}
+
+/* Standalone icon buttons — same gray surface + 16px inner padding as input.
+   Padding-driven size: 24px icon + 16px padding × 2 = 56px square. */
+.composerIconBtn {
+  flex-shrink: 0;
+  background: #f4f6f5;
+  border: 0;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  transition: background 0.18s ease;
+}
+
+.composerIconBtn:hover {
+  background: #eaedeb;
+}
+
+/* ── M3 navigation handle (Figma node 50785:11446) ───────
+   24px tall, 108×4 #1d1b20 pill, 12px radius, centered. */
+.navPillWrap {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 24px;
+  margin-top: 8px;
+}
+
+.navPill {
+  width: 108px;
+  height: 4px;
+  border-radius: 12px;
+  background: #1d1b20;
+}
