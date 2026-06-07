@@ -1,0 +1,776 @@
+/* Need v2 — iPhone home screen.
+   Matches Figma node 3185:18350 (Home) and 3185:17729 (focused). */
+
+.screen {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #ffffff;
+  font-family: var(--font-need), -apple-system, BlinkMacSystemFont, "Inter",
+    "Pretendard", "Segoe UI", sans-serif;
+  color: #111212;
+  overflow: hidden;
+}
+
+/* ── Background animation — matches Figma "BG_animation_mp4" node 3185:18360 ──
+   Soft mint-green aurora at the bottom that slowly drifts.
+   Sized 1:1 to phone width (matches Figma 390×390 at bottom-left of 390×844). */
+.bgAnimation {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  aspect-ratio: 1 / 1;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 1;
+  /* Fade the top edge of the aurora area so blur doesn't cut hard against white */
+  -webkit-mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 18%,
+    rgba(0, 0, 0, 1) 38%
+  );
+  mask-image: linear-gradient(
+    to bottom,
+    rgba(0, 0, 0, 0) 0%,
+    rgba(0, 0, 0, 0.6) 18%,
+    rgba(0, 0, 0, 1) 38%
+  );
+}
+
+.bgBlob {
+  position: absolute;
+  border-radius: 50%;
+  filter: blur(56px);
+  will-change: transform, opacity;
+}
+
+/* Primary mint pool — strongest at lower-left (~25% from left, near bottom) */
+.bgBlobA {
+  width: 95%;
+  height: 65%;
+  bottom: -2%;
+  left: -22%;
+  background: radial-gradient(
+    circle,
+    rgba(115, 224, 165, 0.85) 0%,
+    rgba(150, 232, 188, 0.5) 30%,
+    rgba(180, 238, 205, 0.22) 55%,
+    rgba(200, 240, 215, 0) 75%
+  );
+  animation: bgDriftLR 18s ease-in-out infinite;
+}
+
+/* Secondary mint pool — right of center, slightly lighter */
+.bgBlobB {
+  width: 100%;
+  height: 65%;
+  bottom: -4%;
+  right: -28%;
+  background: radial-gradient(
+    circle,
+    rgba(140, 228, 178, 0.65) 0%,
+    rgba(170, 236, 200, 0.35) 30%,
+    rgba(195, 240, 215, 0.14) 55%,
+    rgba(205, 242, 218, 0) 75%
+  );
+  animation: bgDriftLRSlow 22s ease-in-out infinite;
+  animation-delay: -7s;
+}
+
+/* Warm cream highlight — right side mid-bottom, very subtle */
+.bgBlobC {
+  width: 75%;
+  height: 40%;
+  bottom: 22%;
+  right: -15%;
+  background: radial-gradient(
+    circle,
+    rgba(248, 240, 190, 0.5) 0%,
+    rgba(248, 240, 190, 0.2) 40%,
+    rgba(248, 240, 190, 0) 70%
+  );
+  animation: bgDriftLRCream 26s ease-in-out infinite;
+  animation-delay: -14s;
+}
+
+/* Drift animations — left → right sweep with subtle vertical wobble.
+   Each blob enters from off-screen left, sweeps right, fades, loops.
+   Staggered via animation-delay so the aurora always feels alive. */
+@keyframes bgDriftLR {
+  0% {
+    transform: translate3d(-45%, 4%, 0) scale(0.95);
+    opacity: 0;
+  }
+  18% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(0%, -3%, 0) scale(1.06);
+    opacity: 1;
+  }
+  82% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(45%, 4%, 0) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@keyframes bgDriftLRSlow {
+  0% {
+    transform: translate3d(-40%, -2%, 0) scale(0.92);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(2%, 4%, 0) scale(1.04);
+    opacity: 1;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(45%, -2%, 0) scale(0.92);
+    opacity: 0;
+  }
+}
+
+@keyframes bgDriftLRCream {
+  0% {
+    transform: translate3d(-50%, 0, 0) scale(0.95);
+    opacity: 0;
+  }
+  20% {
+    opacity: 1;
+  }
+  50% {
+    transform: translate3d(-4%, -6%, 0) scale(1.08);
+    opacity: 0.9;
+  }
+  80% {
+    opacity: 1;
+  }
+  100% {
+    transform: translate3d(40%, 0, 0) scale(0.95);
+    opacity: 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bgBlobA, .bgBlobB, .bgBlobC {
+    animation: none;
+    opacity: 1;
+    transform: none;
+  }
+}
+
+/* ── Top gradient overlay (status bar + nav bar) ──
+   Figma "Top" component — white→transparent gradient, sits above content. */
+.top {
+  position: absolute;
+  inset: 0 0 auto 0;
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  background: linear-gradient(
+    to bottom,
+    #ffffff 0%,
+    rgba(255, 255, 255, 0.8) 86%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  pointer-events: none;
+}
+
+/* Material 3 Android status bar — 52px tall, time left, camera cutout center, wifi/signal/battery right */
+.statusBar {
+  position: relative;
+  height: 52px;
+  padding: 0 24px 10px;
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-shrink: 0;
+  pointer-events: auto;
+}
+
+.statusTime {
+  font-size: 14px;
+  line-height: 20px;
+  font-weight: 500;
+  color: #1d1b20;
+  letter-spacing: 0.14px;
+  font-variant-numeric: tabular-nums;
+}
+
+.cameraCutout {
+  position: absolute;
+  top: 18px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 24px;
+  height: 24px;
+}
+
+.statusIcons {
+  position: relative;
+  width: 46px;
+  height: 17px;
+}
+
+.iconWifi { position: absolute; left: 0; top: 0; }
+.iconSignal { position: absolute; left: 16px; top: 0; }
+.iconBattery { position: absolute; left: 38px; top: 1px; }
+
+/* ── Navigation bar — menu, Chat/Wallet tabs, badge ── */
+.navBar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  height: 48px;
+  padding: 0 8px 8px;
+  pointer-events: auto;
+}
+
+.navIconBtn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+  width: 40px;
+  height: 40px;
+}
+
+.navTabs {
+  display: flex;
+  align-items: flex-start;
+}
+
+.navTab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+  padding: 0 8px;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0;
+  color: #8e8f96;
+  font-weight: 400;
+}
+
+.navTab[data-active="true"] {
+  color: #111212;
+  font-weight: 600;
+}
+
+.navTabUnderline {
+  width: 16px;
+  height: 2px;
+  background: #111212;
+  border-radius: 1px;
+}
+
+/* ── Body (idle state: title + chips) ─────────────────── */
+.body {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+  padding-top: 100px; /* clear status+nav */
+  gap: 24px;
+  transform: translateY(-35px); /* matches Figma top:calc(50%-35px) */
+  z-index: 2;
+}
+
+.bodyTitle {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 600;
+  letter-spacing: -0.1px;
+  color: #2a2b2d;
+  text-align: center;
+  padding: 0 4px;
+}
+
+.chips {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  justify-content: center;
+  align-items: flex-start;
+  width: 100%;
+}
+
+.chip {
+  background: #ffffff;
+  border: 0.5px solid #dddddf;
+  border-radius: 24px;
+  padding: 8px 16px;
+  font-size: 18px;
+  line-height: 24px;
+  letter-spacing: 0;
+  font-weight: 400;
+  color: #2a2b2d;
+  white-space: nowrap;
+}
+
+/* ── Focused state: stacked prompt bubbles above chat bar ── */
+.prompts {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 8px 16px; /* Figma: 8px (prompt-list py-8) + composer py-8 = 16px visible gap */
+  width: 100%;
+}
+
+.promptBubble {
+  width: 302px;
+  background: #ffffff;
+  border: 0.5px solid #dddddf;
+  border-radius: 24px 24px 0 24px;
+  padding: 12px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  letter-spacing: 0;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.promptBubble:hover {
+  background: #f7f8f9;
+}
+
+.promptBubble:active {
+  transform: scale(0.98);
+}
+
+/* ── Chat content (thinking + answer mode) ─────────────────── */
+.chat {
+  position: absolute;
+  top: 102px; /* clear status+nav */
+  bottom: 96px; /* clear chat bar */
+  left: 0;
+  right: 0;
+  overflow-y: auto;
+  z-index: 3;
+  padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  scrollbar-width: none;
+}
+
+.chat::-webkit-scrollbar {
+  display: none;
+}
+
+.userMsgRow {
+  display: flex;
+  justify-content: flex-end;
+  width: 100%;
+}
+
+.userMsgBubble {
+  max-width: calc(100% - 56px);
+  background: #f2f2f5;
+  color: #2a2b2d;
+  border-radius: 24px 24px 0 24px;
+  padding: 12px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  font-weight: 400;
+  letter-spacing: 0;
+}
+
+/* Thinking row — small logo + "Thinking" + animated dots */
+.thinkingRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.thinkingLogo {
+  width: 24px;
+  height: 24px;
+  display: block;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+
+.thinkingText {
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  font-weight: 400;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+}
+
+.thinkingDots {
+  display: inline-flex;
+  margin-left: 2px;
+}
+
+.thinkingDots span {
+  animation: thinkingDot 1.4s steps(1) infinite;
+}
+
+.thinkingDots span:nth-child(2) { animation-delay: 0.35s; }
+.thinkingDots span:nth-child(3) { animation-delay: 0.7s; }
+
+@keyframes thinkingDot {
+  0%, 70%, 100% { opacity: 0; }
+  20%, 60% { opacity: 1; }
+}
+
+/* Answer sections */
+.answerIntro {
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  font-weight: 400;
+  padding: 0 4px;
+}
+
+.answerDivider {
+  height: 0;
+  border-top: 0.5px solid #dddddf;
+  width: 100%;
+  margin: 0;
+}
+
+.answerSection {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.answerH2 {
+  font-size: 20px;
+  line-height: 24px;
+  font-weight: 700;
+  letter-spacing: -0.1px;
+  color: #2a2b2d;
+  padding: 0 4px;
+}
+
+.answerBullets {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 24px;
+}
+
+.answerBullet {
+  list-style: disc;
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  font-weight: 400;
+  padding-left: 4px;
+}
+
+.answerBody {
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  font-weight: 400;
+  padding: 0 4px;
+}
+
+.followupPrompt {
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  font-weight: 400;
+  padding: 0 4px;
+}
+
+/* In-chat suggested follow-up prompts — appear when user scrolls to bottom */
+/* Scroll-down button — floats above composer when there's more chat content below */
+.scrollDownWrap {
+  display: flex;
+  justify-content: center;
+  padding: 4px 0 12px;
+  width: 100%;
+}
+
+.scrollDownBtn {
+  pointer-events: auto;
+  width: 40px;
+  height: 40px;
+  border-radius: 100px;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  box-shadow: 0 0 16px 0 rgba(34, 62, 119, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+  cursor: pointer;
+  transition: transform 0.12s ease, background 0.18s ease;
+}
+
+.scrollDownBtn:hover {
+  background: #f7f8f9;
+}
+
+.scrollDownBtn:active {
+  transform: scale(0.94);
+}
+
+.followupList {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  align-items: flex-end;
+  padding: 16px 0 8px;
+  width: 100%;
+}
+
+.followupBubble {
+  align-self: flex-end;
+  max-width: calc(100% - 56px);
+  background: #ffffff;
+  border: 0.5px solid #dddddf;
+  border-radius: 24px 24px 0 24px;
+  padding: 12px 20px;
+  font-size: 18px;
+  line-height: 24px;
+  color: #2a2b2d;
+  font-weight: 400;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.18s ease, transform 0.12s ease;
+}
+
+.followupBubble:hover {
+  background: #f7f8f9;
+}
+
+.followupBubble:active {
+  transform: scale(0.98);
+}
+
+/* Sources / actions row below the answer */
+.answerActions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0 4px;
+}
+
+.answerIcons {
+  display: flex;
+  gap: 8px;
+  color: #5b5d63;
+}
+
+.sourcesPill {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  background: #f2f2f5;
+  border-radius: 24px;
+  padding: 8px 12px;
+  font-size: 14px;
+  line-height: 18px;
+  color: #5b5d63;
+}
+
+.sourcesThumbs {
+  display: flex;
+  align-items: center;
+}
+
+.sourcesThumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #c2c3c6;
+  border: 1px solid #fff;
+  margin-right: -4px;
+}
+
+.sourcesThumb:last-child {
+  margin-right: 0;
+}
+
+/* ── Chat bar area at bottom ──
+   Idle: utility buttons row + composer + home indicator on #f0f4f9
+   Focused: composer + keyboard */
+.chatArea {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  width: 100%;
+  z-index: 4;
+}
+
+.gradientWrap {
+  width: 100%;
+  background: linear-gradient(
+    to bottom,
+    rgba(240, 244, 249, 0) 0%,
+    #f0f4f9 70%
+  );
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Utility buttons row (idle only) — horizontal scroll */
+.utilityRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 0 8px 16px;
+  width: 100%;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.utilityRow::-webkit-scrollbar {
+  display: none;
+}
+
+.utilityBtn {
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 1px solid #ffffff;
+  border-radius: 24px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  box-shadow: 0 0 8px 0 rgba(34, 62, 119, 0.08);
+}
+
+.utilityBtnLabel {
+  font-size: 16px;
+  line-height: 22px;
+  font-weight: 600;
+  color: #2a2b2d;
+  white-space: nowrap;
+  letter-spacing: 0;
+}
+
+/* Composer row */
+.composerRow {
+  display: flex;
+  align-items: flex-end;
+  gap: 8px;
+  padding: 8px 16px;
+  width: 100%;
+}
+
+.composerAddBtn {
+  flex-shrink: 0;
+  background: #ffffff;
+  border: 0;
+  border-radius: 100px;
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 0 8px 0 rgba(34, 62, 119, 0.08);
+  padding: 12px;
+}
+
+.composerInput {
+  flex: 1;
+  background: #ffffff;
+  border-radius: 24px;
+  display: flex;
+  align-items: center;
+  padding: 4px 4px 4px 8px;
+  min-height: 48px;
+  box-shadow: 0 0 8px 0 rgba(34, 62, 119, 0.08);
+  cursor: text;
+  overflow: hidden;
+}
+
+.composerInputInner {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  padding: 8px;
+  position: relative;
+  min-height: 40px;
+}
+
+.composerPlaceholder {
+  font-size: 18px;
+  line-height: 24px;
+  color: #8e8f96;
+  letter-spacing: 0;
+  font-weight: 400;
+}
+
+.cursor {
+  position: absolute;
+  left: 10px;
+  top: 8px;
+  width: 2px;
+  height: 24px;
+  background: #111212;
+  border-radius: 100px;
+  animation: cursorBlink 1.06s steps(1) infinite;
+}
+
+@keyframes cursorBlink {
+  0%, 50% { opacity: 1; }
+  50.01%, 100% { opacity: 0; }
+}
+
+.composerMicBtn {
+  flex-shrink: 0;
+  background: transparent;
+  border: 0;
+  border-radius: 100px;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 8px;
+}
+
+/* Material 3 navigation handle (108×4 pill) on #F0F4F9 bg */
+.homeIndicatorWrap {
+  width: 100%;
+  height: 24px;
+  background: #f0f4f9;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding-bottom: 8px;
+}
+
+.homeIndicator {
+  width: 108px;
+  height: 4px;
+  background: #1d1b20;
+  border-radius: 12px;
+}
