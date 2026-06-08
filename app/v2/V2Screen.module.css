@@ -249,14 +249,14 @@
 .navTabs {
   display: flex;
   align-items: flex-start;
+  gap: 16px;
 }
 
 .navTab {
   display: flex;
   flex-direction: column;
-  align-items: center;
+  align-items: stretch;
   gap: 2px;
-  padding: 0 8px;
   font-size: 18px;
   line-height: 24px;
   letter-spacing: 0;
@@ -270,7 +270,7 @@
 }
 
 .navTabUnderline {
-  width: 16px;
+  align-self: stretch;
   height: 2px;
   background: #111212;
   border-radius: 1px;

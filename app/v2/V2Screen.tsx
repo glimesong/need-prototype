@@ -215,7 +215,7 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
                   aria-hidden
                 />
                 <div className={styles.thinkingText}>
-                  Thinking
+                  {strings.thinking}
                   <span className={styles.thinkingDots} aria-hidden>
                     <span>.</span>
                     <span>.</span>

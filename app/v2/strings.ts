@@ -2,6 +2,7 @@ export type V2Locale = "en" | "ko" | "ja";
 
 export type V2Strings = {
   bodyTitle: string;
+  thinking: string;
   sources: string;
   chips: string[];
   suggestedPrompts: string[];
@@ -17,6 +18,7 @@ export type V2Strings = {
 
 const EN: V2Strings = {
   bodyTitle: "What can I help you with?",
+  thinking: "Thinking",
   sources: "Sources",
   chips: ["My health", "Screening", "Nutrition", "Prevention", "Health trends"],
   suggestedPrompts: [
@@ -81,6 +83,7 @@ const EN: V2Strings = {
 
 const KO: V2Strings = {
   bodyTitle: "무엇을 도와드릴까요?",
+  thinking: "생각 중",
   sources: "출처",
   chips: ["내 건강", "검진", "영양", "예방", "건강 트렌드"],
   suggestedPrompts: [
@@ -133,12 +136,13 @@ const KO: V2Strings = {
     "검진 예약하기",
   ],
   utilityLabels: ["검진 예약", "증상 기록", "리포트 분석", "둘러보기"],
-  composerPlaceholder: "Need에게 말하기",
+  composerPlaceholder: "니드에게 말하기",
   navTabs: { chat: "대화", wallet: "지갑" },
 };
 
 const JA: V2Strings = {
   bodyTitle: "何かお手伝いできますか？",
+  thinking: "考え中",
   sources: "出典",
   chips: ["私の健康", "検診", "栄養", "予防", "健康トレンド"],
   suggestedPrompts: [
