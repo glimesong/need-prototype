@@ -5,6 +5,8 @@ import V2AutoplayCursor from "../../V2AutoplayCursor";
 import { V2AutoplayProvider } from "../../V2AutoplayContext";
 import { PlatformProvider } from "../../../lib/PlatformContext";
 
+export const dynamic = "force-dynamic";
+
 export default function V2IOSKorean() {
   return (
     <main className={styles.stage}>
