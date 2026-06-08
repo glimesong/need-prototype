@@ -6,8 +6,8 @@
   width: 100%;
   height: 100%;
   background: #ffffff;
-  font-family: var(--font-need), -apple-system, BlinkMacSystemFont, "Inter",
-    "Pretendard", "Segoe UI", sans-serif;
+  font-family: "Pretendard Variable", "Pretendard", -apple-system,
+    BlinkMacSystemFont, "Inter", "Segoe UI", sans-serif;
   color: #111212;
   overflow: hidden;
 }

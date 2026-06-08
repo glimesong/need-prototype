@@ -1,89 +1,62 @@
 "use client";
 
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import styles from "./V2Screen.module.css";
 import V2Keyboard from "./V2Keyboard";
-
-const CHIPS = ["My health", "Screening", "Nutrition", "Prevention", "Health trends"];
-
-const SUGGESTED_PROMPTS = [
-  "What are common warning signs of cancer?",
-  "Can vaccines for diseases such as HPV lower cancer risk?",
-  "Which cancer screenings should I get for my age and health?",
-];
+import { useV2Autoplay } from "./V2AutoplayContext";
+import { getV2Strings, type V2Locale } from "./strings";
 
 type Mode = "idle" | "focused" | "thinking" | "answer";
 
-interface AnswerSection {
-  heading: string;
-  bullets: string[];
-}
-
-const ANSWER_INTRO =
-  "Cancer warning signs can vary depending on the type and location, but there are some common symptoms to be aware of:";
-
-const ANSWER_SECTIONS: AnswerSection[] = [
-  {
-    heading: "General Warning Signs:",
-    bullets: [
-      "Unexplained weight loss",
-      "Persistent fatigue that doesn't improve with rest",
-      "Fever that comes and goes without clear cause",
-      "Pain that doesn't go away or worsens over time",
-    ],
-  },
-  {
-    heading: "Physical Changes:",
-    bullets: [
-      "Lumps or thickening in the breast, testicles, or other parts of the body",
-      "Changes in bowel or bladder habits",
-      "Sores that don't heal",
-      "Unusual bleeding or discharge",
-      "Persistent cough or hoarseness",
-      "Difficulty swallowing",
-    ],
-  },
-  {
-    heading: "Skin Changes:",
-    bullets: [
-      "Changes in the size, shape, or color of moles",
-      "New skin growths or sores that don't heal",
-    ],
-  },
+const UTILITY_ICONS: React.ReactNode[] = [
+  <IconBookScreening key="book" />,
+  <IconReport key="report" />,
+  <IconSummarize key="summarize" />,
+  <IconDiscover key="discover" />,
 ];
 
-const ANSWER_OUTRO = {
-  heading: "Important to Remember:",
-  body:
-    "These symptoms don't necessarily mean you have cancer—they can be caused by many other conditions. However, if you experience any persistent or concerning symptoms, it's important to see a doctor for proper evaluation.",
-  body2:
-    "Early detection through regular screenings is one of the most effective ways to catch cancer when it's most treatable. Need can help you stay on top of your recommended cancer screenings based on your personal health profile.",
-};
-
-const FOLLOWUP_QUESTION =
-  "Is there a specific type of cancer or symptom you're concerned about?";
-
-const FOLLOWUP_PROMPTS = [
-  "What screening do I need?",
-  "How can I prevent cancer?",
-  "Book a screening",
-];
-
-const UTILITY_BUTTONS: { icon: React.ReactNode; label: string }[] = [
-  { icon: <IconAskQuestion />, label: "Ask a question" },
-  { icon: <IconBookScreening />, label: "Screening Booking" },
-  { icon: <IconReport />, label: "Report Symptoms" },
-  { icon: <IconSummarize />, label: "Analyze Reports" },
-  { icon: <IconDiscover />, label: "Discover" },
-];
-
-export default function V2Screen() {
+export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) {
+  const strings = useMemo(() => getV2Strings(locale), [locale]);
   const [mode, setMode] = useState<Mode>("idle");
   const [userMessage, setUserMessage] = useState<string | null>(null);
   const [revealCount, setRevealCount] = useState(0);
   const [canScrollDown, setCanScrollDown] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
+  const {
+    step: autoStep,
+    userTakeover,
+    takeOver,
+    screenRef,
+    composerRef,
+    firstPromptRef,
+    scrollDownRef,
+  } = useV2Autoplay();
+  const prevAutoStepRef = useRef<string>(autoStep);
+
+  // Drive mode from autoplay timeline until the user takes over.
+  useEffect(() => {
+    if (userTakeover) return;
+    if (prevAutoStepRef.current === autoStep) return;
+    prevAutoStepRef.current = autoStep;
+    if (autoStep === "tapComposer") {
+      setMode("focused");
+    } else if (autoStep === "tapPrompt") {
+      setUserMessage(strings.suggestedPrompts[0]);
+      setMode("thinking");
+      setRevealCount(0);
+      setCanScrollDown(false);
+      if (chatRef.current) chatRef.current.scrollTop = 0;
+    } else if (autoStep === "tapScroll") {
+      const el = chatRef.current;
+      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    } else if (autoStep === "reset") {
+      setMode("idle");
+      setUserMessage(null);
+      setRevealCount(0);
+      setCanScrollDown(false);
+    }
+  }, [autoStep, userTakeover, strings]);
 
   const isChat = mode === "thinking" || mode === "answer";
   const answerComplete = mode === "answer" && revealCount >= 8;
@@ -140,16 +113,22 @@ export default function V2Screen() {
     if (chatRef.current) chatRef.current.scrollTop = 0;
   };
 
+  const sendPromptUser = (text: string) => {
+    takeOver();
+    sendPrompt(text);
+  };
+
   const handleScreenClick = () => {
+    takeOver();
     if (mode === "focused") setMode("idle");
   };
 
   return (
-    <div className={styles.screen} onClick={handleScreenClick}>
+    <div className={styles.screen} onClick={handleScreenClick} ref={screenRef}>
       {/* Top: status bar + nav (gradient overlay) */}
       <div className={styles.top}>
         <StatusBar />
-        <NavBar />
+        <NavBar chatLabel={strings.navTabs.chat} walletLabel={strings.navTabs.wallet} />
       </div>
 
       {/* Background aurora animation (idle only) — Figma node 3185:18360 */}
@@ -182,9 +161,9 @@ export default function V2Screen() {
             transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
             key="idleBody"
           >
-            <div className={styles.bodyTitle}>What can I help you with?</div>
+            <div className={styles.bodyTitle}>{strings.bodyTitle}</div>
             <div className={styles.chips}>
-              {CHIPS.map((c) => (
+              {strings.chips.map((c) => (
                 <button key={c} className={styles.chip} tabIndex={-1}>
                   {c}
                 </button>
@@ -251,7 +230,7 @@ export default function V2Screen() {
               <>
                 {revealCount >= 1 && (
                   <Reveal>
-                    <p className={styles.answerIntro}>{ANSWER_INTRO}</p>
+                    <p className={styles.answerIntro}>{strings.answerIntro}</p>
                   </Reveal>
                 )}
                 {revealCount >= 2 && (
@@ -259,7 +238,7 @@ export default function V2Screen() {
                     <div className={styles.answerDivider} />
                   </Reveal>
                 )}
-                {ANSWER_SECTIONS.map((section, i) => {
+                {strings.answerSections.map((section, i) => {
                   const requiredCount = 2 + i + 1; // 3, 4, 5
                   if (revealCount < requiredCount) return null;
                   return (
@@ -285,9 +264,9 @@ export default function V2Screen() {
                 {revealCount >= 6 && (
                   <Reveal>
                     <div className={styles.answerSection}>
-                      <h2 className={styles.answerH2}>{ANSWER_OUTRO.heading}</h2>
-                      <p className={styles.answerBody}>{ANSWER_OUTRO.body}</p>
-                      <p className={styles.answerBody}>{ANSWER_OUTRO.body2}</p>
+                      <h2 className={styles.answerH2}>{strings.answerOutro.heading}</h2>
+                      <p className={styles.answerBody}>{strings.answerOutro.body}</p>
+                      <p className={styles.answerBody}>{strings.answerOutro.body2}</p>
                     </div>
                   </Reveal>
                 )}
@@ -299,7 +278,7 @@ export default function V2Screen() {
                 {revealCount >= 8 && (
                   <Reveal>
                     <div>
-                      <p className={styles.followupPrompt}>{FOLLOWUP_QUESTION}</p>
+                      <p className={styles.followupPrompt}>{strings.followupQuestion}</p>
                       <div className={styles.answerActions} style={{ marginTop: 12 }}>
                         <div className={styles.answerIcons}>
                           <IconCopy />
@@ -312,7 +291,7 @@ export default function V2Screen() {
                             <div className={styles.sourcesThumb} />
                             <div className={styles.sourcesThumb} />
                           </div>
-                          <span>Sources</span>
+                          <span>{strings.sources}</span>
                         </div>
                       </div>
                     </div>
@@ -330,7 +309,7 @@ export default function V2Screen() {
                       transition={{ duration: 0.3, ease: [0.2, 0.8, 0.2, 1] }}
                       key="followups"
                     >
-                      {FOLLOWUP_PROMPTS.map((p, i) => (
+                      {strings.followupPrompts.map((p, i) => (
                         <motion.button
                           type="button"
                           key={p}
@@ -338,7 +317,7 @@ export default function V2Screen() {
                           initial={{ opacity: 0, y: 8 }}
                           animate={{ opacity: 1, y: 0 }}
                           transition={{ duration: 0.24, delay: 0.08 * i }}
-                          onClick={() => sendPrompt(p)}
+                          onClick={() => sendPromptUser(p)}
                         >
                           {p}
                         </motion.button>
@@ -369,14 +348,15 @@ export default function V2Screen() {
               }}
               key="prompts"
             >
-              {SUGGESTED_PROMPTS.map((p) => (
+              {strings.suggestedPrompts.map((p, i) => (
                 <button
                   type="button"
                   key={p}
+                  ref={i === 0 ? firstPromptRef : undefined}
                   className={styles.promptBubble}
                   onClick={(e) => {
                     e.stopPropagation();
-                    sendPrompt(p);
+                    sendPromptUser(p);
                   }}
                 >
                   {p}
@@ -398,8 +378,12 @@ export default function V2Screen() {
             >
               <button
                 type="button"
+                ref={scrollDownRef}
                 className={styles.scrollDownBtn}
-                onClick={scrollToBottom}
+                onClick={() => {
+                  takeOver();
+                  scrollToBottom();
+                }}
                 aria-label="Scroll to bottom"
                 tabIndex={-1}
               >
@@ -420,10 +404,10 @@ export default function V2Screen() {
                 transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
                 key="utilityRow"
               >
-                {UTILITY_BUTTONS.map((b) => (
-                  <button key={b.label} className={styles.utilityBtn} tabIndex={-1}>
-                    {b.icon}
-                    <span className={styles.utilityBtnLabel}>{b.label}</span>
+                {strings.utilityLabels.map((label, i) => (
+                  <button key={label} className={styles.utilityBtn} tabIndex={-1}>
+                    {UTILITY_ICONS[i]}
+                    <span className={styles.utilityBtnLabel}>{label}</span>
                   </button>
                 ))}
               </motion.div>
@@ -436,14 +420,18 @@ export default function V2Screen() {
             </button>
             <div
               className={styles.composerInput}
-              onClick={() => mode === "idle" && setMode("focused")}
+              onClick={() => {
+                takeOver();
+                if (mode === "idle") setMode("focused");
+              }}
               role="textbox"
+              ref={composerRef}
             >
               <div className={styles.composerInputInner}>
                 {mode === "focused" ? (
                   <span className={styles.cursor} aria-hidden />
                 ) : (
-                  <span className={styles.composerPlaceholder}>Talk to Need</span>
+                  <span className={styles.composerPlaceholder}>{strings.composerPlaceholder}</span>
                 )}
               </div>
               <button className={styles.composerMicBtn} tabIndex={-1} aria-label="Voice">
@@ -564,7 +552,7 @@ function StatusBar() {
 }
 
 /* ───────────────── Nav bar ───────────────── */
-function NavBar() {
+function NavBar({ chatLabel, walletLabel }: { chatLabel: string; walletLabel: string }) {
   return (
     <div className={styles.navBar}>
       <div className={styles.navIconBtn} aria-label="Menu">
@@ -572,11 +560,11 @@ function NavBar() {
       </div>
       <div className={styles.navTabs}>
         <div className={styles.navTab} data-active="true">
-          <span>Chat</span>
+          <span>{chatLabel}</span>
           <div className={styles.navTabUnderline} />
         </div>
         <div className={styles.navTab}>
-          <span>Wallet</span>
+          <span>{walletLabel}</span>
         </div>
       </div>
       <div className={styles.navIconBtn} aria-label="Badge">
@@ -712,49 +700,6 @@ function IconMic() {
           <div style={{ position: "absolute", inset: "-16.67% -7.69%" }}>
             <img src="/v2/icons/mic-cup.svg" alt="" style={imgStyle} />
           </div>
-        </div>
-      </div>
-    </div>
-  );
-}
-
-function IconAskQuestion() {
-  // 16x16, "Drone" icon — bird's-eye drone with rotors (per Figma)
-  return (
-    <div style={{ position: "relative", width: 16, height: 16, overflow: "hidden" }} aria-hidden>
-      <div style={{ position: "absolute", left: 1, top: 1, width: 14, height: 14 }}>
-        {/* Body */}
-        <div
-          style={{
-            position: "absolute",
-            top: 0.1,
-            left: "8.57%",
-            right: "8.58%",
-            height: 11.6,
-          }}
-        >
-          <img src="/v2/icons/drone-1.svg" alt="" style={imgStyle} />
-        </div>
-        {/* Rotor groups (extend far beyond container per Figma) */}
-        <div style={{ position: "absolute", inset: "0 -733.33% -733.33% 0" }}>
-          <img src="/v2/icons/drone-2.svg" alt="" style={imgStyle} />
-        </div>
-        <div style={{ position: "absolute", inset: "0 -733.33% -733.33% 0" }}>
-          <img src="/v2/icons/drone-3.svg" alt="" style={imgStyle} />
-        </div>
-        {/* Small foot left */}
-        <div style={{ position: "absolute", inset: "70% 70% 2.5% 2.5%" }}>
-          <img src="/v2/icons/drone-4.svg" alt="" style={imgStyle} />
-        </div>
-        {/* Small foot right (mirrored) */}
-        <div
-          style={{
-            position: "absolute",
-            inset: "70% 2.5% 2.5% 70%",
-            transform: "scaleX(-1)",
-          }}
-        >
-          <img src="/v2/icons/drone-5.svg" alt="" style={imgStyle} />
         </div>
       </div>
     </div>
