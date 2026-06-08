@@ -88,8 +88,10 @@ export function useV2Autoplay() {
 
 export function V2AutoplayProvider({
   children,
+  disabled = false,
 }: {
   children: React.ReactNode;
+  disabled?: boolean;
 }) {
   const [state, setState] = useState<State>({
     step: "idle",
@@ -102,7 +104,9 @@ export function V2AutoplayProvider({
   const startRef = useRef<number>(0);
   const rafRef = useRef<number>(0);
   const loopRef = useRef<number>(0);
-  const userTakeoverRef = useRef<boolean>(false);
+  // When `disabled`, behave as if the user took over from frame 0 so the
+  // timeline never advances past the initial idle state (home chat page).
+  const userTakeoverRef = useRef<boolean>(disabled);
 
   const screenRef = useRef<HTMLDivElement | null>(null);
   const composerRef = useRef<HTMLDivElement | null>(null);
