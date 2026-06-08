@@ -7,13 +7,13 @@ import { PlatformProvider } from "../../../lib/PlatformContext";
 
 export const dynamic = "force-dynamic";
 
-export default function V2IOSJapanese() {
+export default function V2IPhoneKorean() {
   return (
     <main className={styles.stage}>
       <PhoneFrame width={450}>
         <PlatformProvider value="ios">
           <V2AutoplayProvider>
-            <V2Screen locale="ja" />
+            <V2Screen locale="ko" />
             <V2AutoplayCursor />
           </V2AutoplayProvider>
         </PlatformProvider>

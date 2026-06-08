@@ -7,7 +7,7 @@ import { PlatformProvider } from "../../lib/PlatformContext";
 
 export const dynamic = "force-dynamic";
 
-export default async function V2IOS({
+export default async function V2IPhone({
   searchParams,
 }: {
   searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
