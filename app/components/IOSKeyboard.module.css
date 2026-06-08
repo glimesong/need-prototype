@@ -1,0 +1,126 @@
+/* iOS 26 keyboard (matches Figma node 5517:36198 exactly) */
+.keyboard {
+  flex: 0 0 auto;
+  background: #e6e9ed;
+  padding: 12px 0 10px;
+  user-select: none;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.predictiveBar {
+  display: flex;
+  align-items: center;
+  height: 25px;
+  padding: 0 22px;
+  gap: 20px;
+}
+
+.predictiveItem {
+  flex: 1 1 0;
+  min-width: 0;
+  font-family: "SF Pro", -apple-system, sans-serif;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 22px;
+  letter-spacing: -0.43px;
+  color: #1a1a1a;
+  text-align: center;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.predictiveDivider {
+  width: 1px;
+  height: 25px;
+  background: #cccccc;
+  opacity: 0.1;
+  flex: 0 0 auto;
+}
+
+.keys {
+  display: flex;
+  flex-direction: column;
+  gap: 11px;
+  padding: 12px 8.5px 0;
+}
+
+.row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.row2 {
+  padding: 0 20px;
+}
+
+.row3 {
+  gap: 14.25px;
+}
+
+.row3Inner {
+  display: flex;
+  align-items: center;
+  flex: 1 1 0;
+  gap: 6px;
+  min-width: 0;
+}
+
+.key {
+  flex: 1 1 0;
+  min-width: 0;
+  height: 45px;
+  background: rgba(255, 255, 255, 0.85);
+  color: #595959;
+  border-radius: 8.5px;
+  font-family: "SF Compact", "SF Pro", -apple-system, sans-serif;
+  font-size: 25px;
+  font-weight: 400;
+  line-height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 1px 0 rgba(0, 0, 0, 0.15);
+}
+
+.modKey {
+  flex: 0 0 44.667px;
+  font-size: 23px;
+  line-height: 28px;
+}
+
+.abcKey {
+  flex: 0 0 91.667px;
+  font-family: "SF Compact Rounded", "SF Compact", -apple-system, sans-serif;
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 21px;
+}
+
+.spaceKey {
+  flex: 1 1 0;
+}
+
+.returnKey {
+  flex: 0 0 92px;
+  background: #0088ff;
+  color: #ffffff;
+  font-family: "SF Pro", -apple-system, sans-serif;
+  font-size: 19px;
+  line-height: 28px;
+}
+
+.emojiMicBar {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  height: 70px;
+  padding: 27px 39px 15px 36px;
+}
+
+.emojiMicBar img {
+  display: block;
+  opacity: 0.85;
+}

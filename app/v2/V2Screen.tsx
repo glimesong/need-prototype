@@ -1,10 +1,12 @@
 "use client";
 
 import { useState, useEffect, useRef, useCallback, useMemo } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { motion, AnimatePresence, animate } from "framer-motion";
 import styles from "./V2Screen.module.css";
 import V2Keyboard from "./V2Keyboard";
+import IOSKeyboard from "../components/IOSKeyboard";
 import { useV2Autoplay } from "./V2AutoplayContext";
+import { usePlatform } from "../lib/PlatformContext";
 import { getV2Strings, type V2Locale } from "./strings";
 
 type Mode = "idle" | "focused" | "thinking" | "answer";
@@ -17,12 +19,30 @@ const UTILITY_ICONS: React.ReactNode[] = [
 ];
 
 export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) {
+  const platform = usePlatform();
   const strings = useMemo(() => getV2Strings(locale), [locale]);
   const [mode, setMode] = useState<Mode>("idle");
   const [userMessage, setUserMessage] = useState<string | null>(null);
   const [revealCount, setRevealCount] = useState(0);
   const [canScrollDown, setCanScrollDown] = useState(false);
   const chatRef = useRef<HTMLDivElement>(null);
+  const kbRef = useRef<HTMLDivElement>(null);
+  const homeRef = useRef<HTMLDivElement>(null);
+  const [kbHeight, setKbHeight] = useState(0);
+  const [homeHeight, setHomeHeight] = useState(0);
+  // Guards onScroll from re-toggling canScrollDown back to true while
+  // a programmatic smooth-scroll is in flight. Without it, mid-scroll
+  // events (dist still > 16) keep the button visible until the very end.
+  const autoScrollingRef = useRef(false);
+
+  // Measure keyboard + home indicator heights so the bottom dock can
+  // animate between them smoothly (avoids the layout pop when keyboard
+  // replaces the home indicator). Re-measures when platform changes
+  // because iOS and Android keyboards differ in height.
+  useEffect(() => {
+    if (kbRef.current) setKbHeight(kbRef.current.offsetHeight);
+    if (homeRef.current) setHomeHeight(homeRef.current.offsetHeight);
+  }, [platform]);
   const {
     step: autoStep,
     userTakeover,
@@ -49,7 +69,23 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
       if (chatRef.current) chatRef.current.scrollTop = 0;
     } else if (autoStep === "tapScroll") {
       const el = chatRef.current;
-      if (el) el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+      if (el) {
+        autoScrollingRef.current = true;
+        const target = el.scrollHeight - el.clientHeight;
+        animate(el.scrollTop, target, {
+          duration: 0.32,
+          ease: [0.45, 0, 0.55, 1],
+          onUpdate: (v) => {
+            el.scrollTop = v;
+          },
+          onComplete: () => {
+            autoScrollingRef.current = false;
+            // Hide the button at the END of the scroll — the chat is
+            // now at the bottom so there's nothing more to scroll to.
+            setCanScrollDown(false);
+          },
+        });
+      }
     } else if (autoStep === "reset") {
       setMode("idle");
       setUserMessage(null);
@@ -91,6 +127,7 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
   }, [mode, revealCount]);
 
   const handleChatScroll = useCallback(() => {
+    if (autoScrollingRef.current) return;
     const el = chatRef.current;
     if (!el) return;
     const dist = el.scrollHeight - el.clientHeight - el.scrollTop;
@@ -100,7 +137,19 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
   const scrollToBottom = useCallback(() => {
     const el = chatRef.current;
     if (!el) return;
-    el.scrollTo({ top: el.scrollHeight, behavior: "smooth" });
+    autoScrollingRef.current = true;
+    const target = el.scrollHeight - el.clientHeight;
+    animate(el.scrollTop, target, {
+      duration: 0.32,
+      ease: [0.45, 0, 0.55, 1],
+      onUpdate: (v) => {
+        el.scrollTop = v;
+      },
+      onComplete: () => {
+        autoScrollingRef.current = false;
+        setCanScrollDown(false);
+      },
+    });
   }, []);
 
   const showScrollDown = isChat && canScrollDown;
@@ -127,7 +176,7 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
     <div className={styles.screen} onClick={handleScreenClick} ref={screenRef}>
       {/* Top: status bar + nav (gradient overlay) */}
       <div className={styles.top}>
-        <StatusBar />
+        <StatusBar platform={platform} />
         <NavBar chatLabel={strings.navTabs.chat} walletLabel={strings.navTabs.wallet} />
       </div>
 
@@ -335,38 +384,6 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
       <div className={styles.chatArea} onClick={(e) => e.stopPropagation()}>
         {/* Focused: stacked suggested prompts above composer */}
         <AnimatePresence>
-          {mode === "focused" && (
-            <motion.div
-              className={styles.prompts}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{
-                duration: 0.28,
-                delay: 0.2,
-                ease: [0.2, 0.8, 0.2, 1],
-              }}
-              key="prompts"
-            >
-              {strings.suggestedPrompts.map((p, i) => (
-                <button
-                  type="button"
-                  key={p}
-                  ref={i === 0 ? firstPromptRef : undefined}
-                  className={styles.promptBubble}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    sendPromptUser(p);
-                  }}
-                >
-                  {p}
-                </button>
-              ))}
-            </motion.div>
-          )}
-        </AnimatePresence>
-
-        <AnimatePresence>
           {showScrollDown && (
             <motion.div
               className={styles.scrollDownWrap}
@@ -393,7 +410,48 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
           )}
         </AnimatePresence>
 
-        <div className={styles.gradientWrap}>
+        {/* Composer — translates Y to rise above the keyboard when
+            focused. Transform-only (no layout property animated).
+            Suggested prompts live inside so they ride up with it. */}
+        <motion.div
+          className={styles.gradientWrap}
+          initial={false}
+          animate={{ y: mode === "focused" ? -(kbHeight - homeHeight) : 0 }}
+          transition={{ duration: 0.36, ease: [0.45, 0, 0.55, 1] }}
+          style={{ willChange: "transform" }}
+        >
+          <AnimatePresence>
+            {mode === "focused" && (
+              <motion.div
+                className={styles.prompts}
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{
+                  duration: 0.28,
+                  delay: 0.2,
+                  ease: [0.45, 0, 0.55, 1],
+                }}
+                key="prompts"
+              >
+                {strings.suggestedPrompts.map((p, i) => (
+                  <button
+                    type="button"
+                    key={p}
+                    ref={i === 0 ? firstPromptRef : undefined}
+                    className={styles.promptBubble}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      sendPromptUser(p);
+                    }}
+                  >
+                    {p}
+                  </button>
+                ))}
+              </motion.div>
+            )}
+          </AnimatePresence>
+
           <AnimatePresence>
             {mode === "idle" && (
               <motion.div
@@ -401,7 +459,7 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
                 initial={{ opacity: 0, y: 12 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 16 }}
-                transition={{ duration: 0.32, ease: [0.2, 0.8, 0.2, 1] }}
+                transition={{ duration: 0.36, ease: [0.45, 0, 0.55, 1] }}
                 key="utilityRow"
               >
                 {strings.utilityLabels.map((label, i) => (
@@ -439,33 +497,35 @@ export default function V2Screen({ locale = "en" }: { locale?: V2Locale } = {}) 
               </button>
             </div>
           </div>
+        </motion.div>
+
+        {/* Bottom dock — fixed CSS height = home indicator. Home
+            indicator fades on opacity only. */}
+        <div className={styles.bottomDock}>
+          <motion.div
+            ref={homeRef}
+            className={`${styles.dockSlot} ${styles.homeIndicatorWrap} ${platform === "ios" ? styles.homeIndicatorWrapIOS : ""}`}
+            initial={false}
+            animate={{ opacity: mode === "focused" ? 0 : 1 }}
+            transition={{ duration: 0.24, ease: [0.45, 0, 0.55, 1] }}
+          >
+            <div className={`${styles.homeIndicator} ${platform === "ios" ? styles.homeIndicatorIOS : ""}`} />
+          </motion.div>
         </div>
 
-        {/* idle/chat → nav pill; focused → keyboard */}
-        <AnimatePresence mode="wait">
-          {mode === "focused" ? (
-            <motion.div
-              key="kb"
-              initial={{ y: 380 }}
-              animate={{ y: 0 }}
-              exit={{ y: 380 }}
-              transition={{ type: "tween", duration: 0.42, ease: [0.2, 0.8, 0.2, 1] }}
-            >
-              <V2Keyboard />
-            </motion.div>
-          ) : (
-            <motion.div
-              key="home"
-              className={styles.homeIndicatorWrap}
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              transition={{ duration: 0.15 }}
-            >
-              <div className={styles.homeIndicator} />
-            </motion.div>
-          )}
-        </AnimatePresence>
+        {/* Keyboard layer — absolute at chatArea bottom, slides up via
+            transform. Clipped by PhoneFrame's overflow:hidden when
+            translated below. */}
+        <motion.div
+          ref={kbRef}
+          className={styles.keyboardLayer}
+          initial={false}
+          animate={{ y: mode === "focused" ? 0 : "100%" }}
+          transition={{ duration: 0.36, ease: [0.45, 0, 0.55, 1] }}
+          style={{ willChange: "transform" }}
+        >
+          {platform === "ios" ? <IOSKeyboard /> : <V2Keyboard />}
+        </motion.div>
       </div>
     </div>
   );
@@ -483,8 +543,37 @@ function Reveal({ children }: { children: React.ReactNode }) {
   );
 }
 
-/* ───────────────── Status bar (Material 3) ───────────────── */
-function StatusBar() {
+/* ───────────────── Status bar (Material 3 / iOS) ───────────────── */
+function StatusBar({ platform }: { platform: "ios" | "android" }) {
+  if (platform === "ios") {
+    return (
+      <div className={`${styles.statusBar} ${styles.statusBarIOS}`}>
+        <span className={`${styles.statusTime} ${styles.statusTimeIOS}`}>9:41</span>
+        <div className={styles.statusIconsIOS} aria-hidden>
+          {/* Signal bars */}
+          <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
+            <rect x="0" y="8" width="3" height="4" rx="0.8" fill="#1d1b20" />
+            <rect x="5" y="5" width="3" height="7" rx="0.8" fill="#1d1b20" />
+            <rect x="10" y="2" width="3" height="10" rx="0.8" fill="#1d1b20" />
+            <rect x="15" y="0" width="3" height="12" rx="0.8" fill="#1d1b20" />
+          </svg>
+          {/* Wifi */}
+          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
+            <path
+              d="M8 2c-2.6 0-5 1-6.8 2.6L8 11.6l6.8-7C13 3 10.6 2 8 2z"
+              fill="#1d1b20"
+            />
+          </svg>
+          {/* Battery */}
+          <svg width="27" height="13" viewBox="0 0 27 13" fill="none">
+            <rect x="0.5" y="0.5" width="23" height="12" rx="3" stroke="#1d1b20" fill="none" />
+            <rect x="2" y="2" width="20" height="9" rx="1.5" fill="#1d1b20" />
+            <rect x="24.5" y="4" width="2" height="5" rx="1" fill="#1d1b20" />
+          </svg>
+        </div>
+      </div>
+    );
+  }
   return (
     <div className={styles.statusBar}>
       <span className={styles.statusTime}>9:30</span>

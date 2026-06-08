@@ -774,3 +774,72 @@
   background: #1d1b20;
   border-radius: 12px;
 }
+
+/* ── Bottom dock — static height, just hosts the home indicator.
+   Keyboard lives in its own absolute layer so we never animate height. */
+.bottomDock {
+  position: relative;
+  width: 100%;
+  height: 24px;
+  flex-shrink: 0;
+}
+
+/* iOS dock height matches iOS home indicator wrap (34px) instead of M3 (24px) */
+.bottomDock:has(.homeIndicatorWrapIOS) {
+  height: 34px;
+}
+
+.dockSlot {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+}
+
+/* Keyboard sits absolutely at chatArea bottom. PhoneFrame .screen has
+   overflow:hidden so the keyboard is clipped when translated below. */
+.keyboardLayer {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  width: 100%;
+  z-index: 5;
+}
+
+/* ── iOS status bar overrides ── */
+.statusBarIOS {
+  height: 54px;
+  padding: 21px 22px 0;
+  align-items: center;
+  font-family: -apple-system, "SF Pro", sans-serif;
+}
+
+.statusTimeIOS {
+  font-size: 17px;
+  font-weight: 590;
+  letter-spacing: -0.01em;
+  padding-left: 6px;
+}
+
+.statusIconsIOS {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  padding-right: 6px;
+}
+
+/* ── iOS home indicator overrides ── */
+.homeIndicatorWrapIOS {
+  height: 34px;
+  background: #f0f4f9;
+  padding-top: 21px;
+  padding-bottom: 8px;
+}
+
+.homeIndicatorIOS {
+  width: 144px;
+  height: 5px;
+  background: #133026;
+  border-radius: 100px;
+}

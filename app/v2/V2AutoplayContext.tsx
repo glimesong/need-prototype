@@ -36,10 +36,10 @@ export const V2_TIMELINE: StepDef[] = [
   { step: "tapPrompt", duration: 400 },
   { step: "thinking", duration: 1400 },
   { step: "answer", duration: 3500 },
-  { step: "postAnswerPause", duration: 1200 },
-  { step: "cursorToScroll", duration: 800 },
+  { step: "postAnswerPause", duration: 100 },
+  { step: "cursorToScroll", duration: 600 },
   { step: "tapScroll", duration: 400 },
-  { step: "dwell", duration: 3000 },
+  { step: "dwell", duration: 3100 },
   { step: "reset", duration: 600 },
 ];
 
