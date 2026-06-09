@@ -8,7 +8,7 @@ import styles from "../../components/AutoplayCursor.module.css";
 const CURSOR_START = { x: 360, y: 870 };
 
 export default function SymptomsAutoplayCursor() {
-  const { step, userTakeover, reportRef, callRef, screenRef } = useSymptomsAutoplay();
+  const { step, userTakeover, reportRef, cancelRef, screenRef } = useSymptomsAutoplay();
   const [target, setTarget] = useState<{ x: number; y: number } | null>(null);
 
   useEffect(() => {
@@ -16,8 +16,8 @@ export default function SymptomsAutoplayCursor() {
       let el: HTMLElement | null = null;
       if (step === "cursorToReport" || step === "tapReport") {
         el = reportRef.current;
-      } else if (step === "cursorToCall" || step === "tapCall") {
-        el = callRef.current;
+      } else if (step === "cursorToCancel" || step === "tapCancel") {
+        el = cancelRef.current;
       }
       if (!el || !screenRef.current) {
         setTarget(null);
@@ -34,16 +34,16 @@ export default function SymptomsAutoplayCursor() {
       });
     });
     return () => cancelAnimationFrame(raf);
-  }, [step, reportRef, callRef, screenRef]);
+  }, [step, reportRef, cancelRef, screenRef]);
 
   if (userTakeover) return null;
 
   const showCursor =
     step === "cursorToReport" ||
     step === "tapReport" ||
-    step === "cursorToCall" ||
-    step === "tapCall";
-  const showRipple = step === "tapReport" || step === "tapCall";
+    step === "cursorToCancel" ||
+    step === "tapCancel";
+  const showRipple = step === "tapReport" || step === "tapCancel";
 
   const pos = target ?? CURSOR_START;
 

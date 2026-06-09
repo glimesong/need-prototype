@@ -14,9 +14,8 @@ export type SymptomsStep =
   | "cursorToReport"
   | "tapReport"
   | "modalDwell"
-  | "cursorToCall"
-  | "tapCall"
-  | "calling"
+  | "cursorToCancel"
+  | "tapCancel"
   | "reset";
 
 interface StepDef {
@@ -29,10 +28,9 @@ export const SYMPTOMS_TIMELINE: StepDef[] = [
   { step: "cursorToReport", duration: 900 },
   { step: "tapReport", duration: 400 },
   { step: "modalDwell", duration: 1400 },
-  { step: "cursorToCall", duration: 800 },
-  { step: "tapCall", duration: 400 },
-  { step: "calling", duration: 3200 },
-  { step: "reset", duration: 600 },
+  { step: "cursorToCancel", duration: 800 },
+  { step: "tapCancel", duration: 400 },
+  { step: "reset", duration: 1200 },
 ];
 
 const TOTAL = SYMPTOMS_TIMELINE.reduce((s, t) => s + t.duration, 0);
@@ -65,7 +63,7 @@ interface Ctx extends State {
   takeOver: () => void;
   screenRef: React.MutableRefObject<HTMLDivElement | null>;
   reportRef: React.MutableRefObject<HTMLButtonElement | null>;
-  callRef: React.MutableRefObject<HTMLButtonElement | null>;
+  cancelRef: React.MutableRefObject<HTMLButtonElement | null>;
 }
 
 const C = createContext<Ctx | null>(null);
@@ -99,7 +97,7 @@ export function SymptomsAutoplayProvider({
 
   const screenRef = useRef<HTMLDivElement | null>(null);
   const reportRef = useRef<HTMLButtonElement | null>(null);
-  const callRef = useRef<HTMLButtonElement | null>(null);
+  const cancelRef = useRef<HTMLButtonElement | null>(null);
 
   const tick = useCallback((now: number) => {
     if (userTakeoverRef.current) return;
@@ -145,7 +143,7 @@ export function SymptomsAutoplayProvider({
         takeOver,
         screenRef,
         reportRef,
-        callRef,
+        cancelRef,
       }}
     >
       {children}
