@@ -549,28 +549,14 @@ function StatusBar({ platform }: { platform: "ios" | "android" }) {
     return (
       <div className={`${styles.statusBar} ${styles.statusBarIOS}`}>
         <span className={`${styles.statusTime} ${styles.statusTimeIOS}`}>9:41</span>
-        <div className={styles.statusIconsIOS} aria-hidden>
-          {/* Signal bars */}
-          <svg width="18" height="12" viewBox="0 0 18 12" fill="none">
-            <rect x="0" y="8" width="3" height="4" rx="0.8" fill="#1d1b20" />
-            <rect x="5" y="5" width="3" height="7" rx="0.8" fill="#1d1b20" />
-            <rect x="10" y="2" width="3" height="10" rx="0.8" fill="#1d1b20" />
-            <rect x="15" y="0" width="3" height="12" rx="0.8" fill="#1d1b20" />
-          </svg>
-          {/* Wifi */}
-          <svg width="16" height="12" viewBox="0 0 16 12" fill="none">
-            <path
-              d="M8 2c-2.6 0-5 1-6.8 2.6L8 11.6l6.8-7C13 3 10.6 2 8 2z"
-              fill="#1d1b20"
-            />
-          </svg>
-          {/* Battery */}
-          <svg width="27" height="13" viewBox="0 0 27 13" fill="none">
-            <rect x="0.5" y="0.5" width="23" height="12" rx="3" stroke="#1d1b20" fill="none" />
-            <rect x="2" y="2" width="20" height="9" rx="1.5" fill="#1d1b20" />
-            <rect x="24.5" y="4" width="2" height="5" rx="1" fill="#1d1b20" />
-          </svg>
-        </div>
+        <span className={styles.statusIconsIOS} aria-hidden>
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ios-signal.svg" alt="" className={styles.iconSignalIOS} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ios-wifi.svg" alt="" className={styles.iconWifiIOS} />
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img src="/ios-battery.svg" alt="" className={styles.iconBatteryIOS} />
+        </span>
       </div>
     );
   }
