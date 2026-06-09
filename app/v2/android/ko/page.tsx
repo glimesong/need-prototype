@@ -1,8 +1,8 @@
-import styles from "../../page.module.css";
-import AndroidPhoneFrame from "../../components/AndroidPhoneFrame";
-import V2Screen from "../V2Screen";
-import V2AutoplayCursor from "../V2AutoplayCursor";
-import { V2AutoplayProvider } from "../V2AutoplayContext";
+import styles from "../../../page.module.css";
+import AndroidPhoneFrame from "../../../components/AndroidPhoneFrame";
+import V2Screen from "../../V2Screen";
+import V2AutoplayCursor from "../../V2AutoplayCursor";
+import { V2AutoplayProvider } from "../../V2AutoplayContext";
 
 export default function V2Korean() {
   return (
