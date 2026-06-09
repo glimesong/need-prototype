@@ -3,6 +3,7 @@ import AndroidPhoneFrame from "../../components/AndroidPhoneFrame";
 import V2Screen from "../V2Screen";
 import V2AutoplayCursor from "../V2AutoplayCursor";
 import { V2AutoplayProvider } from "../V2AutoplayContext";
+import { PlatformProvider } from "../../lib/PlatformContext";
 
 export default async function V2({
   searchParams,
@@ -17,10 +18,12 @@ export default async function V2({
   return (
     <main className={styles.stage}>
       <AndroidPhoneFrame width={412}>
-        <V2AutoplayProvider disabled={isStatic}>
-          <V2Screen />
-          <V2AutoplayCursor />
-        </V2AutoplayProvider>
+        <PlatformProvider value="android">
+          <V2AutoplayProvider disabled={isStatic}>
+            <V2Screen />
+            <V2AutoplayCursor />
+          </V2AutoplayProvider>
+        </PlatformProvider>
       </AndroidPhoneFrame>
     </main>
   );
