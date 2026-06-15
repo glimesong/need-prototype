@@ -32,6 +32,9 @@ export default async function V2Bare({
           aspectRatio: "402 / 874",
           background: "#ffffff",
           overflow: "hidden",
+          // Bake the radius into the iframe's own paint so embedding hosts
+          // don't have to fight Chromium's cross-process clipping quirks.
+          borderRadius: "24px",
         }}
       >
         <PlatformProvider value="ios">
