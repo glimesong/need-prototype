@@ -34,7 +34,9 @@ export default async function V2Bare({
           overflow: "hidden",
           // Bake the radius into the iframe's own paint so embedding hosts
           // don't have to fight Chromium's cross-process clipping quirks.
-          borderRadius: "24px",
+          // 28px is tuned to read at the same proportional radius as the
+          // messenger phone composition on the portfolio gallery card.
+          borderRadius: "28px",
         }}
       >
         <PlatformProvider value="ios">
